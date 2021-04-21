@@ -4,6 +4,7 @@ namespace LTO\Tests\Account;
 
 use LTO\Account;
 use LTO\Account\SignCallback;
+use LTO\Cryptography;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -49,9 +50,10 @@ class SignCallbackTest extends TestCase
 
     public function testInvalidAccount()
     {
-        $account = new Account();
+        $account = new Account($this->createMock(Cryptography::class));
 
         $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unable to use account to sign; no secret sign key');
 
         new SignCallback($account);
     }

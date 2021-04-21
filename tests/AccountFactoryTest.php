@@ -2,6 +2,7 @@
 
 namespace LTO\Tests;
 
+use LTO\Cryptography;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Constraint\IsEqual as IsEqualConstraint;
 use LTO\Account;
@@ -9,6 +10,7 @@ use LTO\AccountFactory;
 
 /**
  * @covers \LTO\AccountFactory
+ * @covers \LTO\Cryptography\ED25519
  */
 class AccountFactoryTest extends TestCase
 {
@@ -125,6 +127,8 @@ class AccountFactoryTest extends TestCase
      */
     public function testConvertSignToEncrypt($expected, $sign)
     {
+        $this->markTestSkipped("Is done in Cryptography class");
+
         foreach ($sign as &$value) {
             $value = base58_decode($value);
         }
@@ -308,7 +312,7 @@ class AccountFactoryTest extends TestCase
     {
         $factory = new AccountFactory('L');
 
-        $account = new Account();
+        $account = new Account($factory->getCryptography());
         $account->encrypt = (object)[
             'publickey' => base58_decode('BVv1ZuE3gKFa6krwWJQwEmrLYUESuUabNCXgYTmCoBt6'),
             'secretkey' => base58_decode('ACsYcMff8UPUc5dvuCMAkqZxcRTjXHMnCc29TZkWLQsZ'),
@@ -324,7 +328,7 @@ class AccountFactoryTest extends TestCase
     {
         $factory = new AccountFactory('L');
 
-        $account = new Account();
+        $account = new Account($factory->getCryptography());
         $account->sign = (object)[
             'publickey' => base58_decode('FkU1XyfrCftc4pQKXCrrDyRLSnifX1SMvmx1CYiiyB3Y'),
             'secretkey' => base58_decode('5DteGKYVUUSSaruCK6H8tpd4oYWfcyNohyhJiYGYGBVzhuEmAmRRNcUJQzA2bk4DqqbtpaE51HTD1i3keTvtbCTL'),
@@ -340,7 +344,7 @@ class AccountFactoryTest extends TestCase
     {
         $factory = new AccountFactory('L');
 
-        $account = new Account();
+        $account = new Account($factory->getCryptography());
         $account->encrypt = (object)[
             'publickey' => base58_decode('EZa2ndj6h95m3xm7DxPQhrtANvhymNC7nWQ3o1vmDJ4x')
         ];
@@ -358,7 +362,7 @@ class AccountFactoryTest extends TestCase
     {
         $factory = new AccountFactory('L');
 
-        $account = new Account();
+        $account = new Account($factory->getCryptography());
         $account->address = base58_decode('3MyuPwbiobZFnZzrtyY8pkaHoQHYmyQxxY1');
 
         $this->expectException(\LTO\InvalidAccountException::class);
@@ -371,7 +375,7 @@ class AccountFactoryTest extends TestCase
     {
         $factory = new AccountFactory('L');
 
-        $account = new Account();
+        $account = new Account($factory->getCryptography());
         $account->address = base58_decode('3JmCa4jLVv7Yn2XkCnBUGsa7WNFVEMxAfWe');
         $account->sign = (object)[
             'publickey' => base58_decode('FkU1XyfrCftc4pQKXCrrDyRLSnifX1SMvmx1CYiiyB3Y')

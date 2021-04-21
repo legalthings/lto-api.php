@@ -2,6 +2,7 @@
 
 namespace LTO\Tests;
 
+use LTO\Cryptography\ED25519;
 use LTO\Event;
 use LTO\EventChain;
 use LTO\Account;
@@ -12,6 +13,7 @@ use function sodium_crypto_generichash as blake2b;
 
 /**
  * @covers \LTO\Account
+ * @covers \LTO\Cryptography\ED25519
  */
 class AccountTest extends TestCase
 {
@@ -22,8 +24,10 @@ class AccountTest extends TestCase
     
     public function setUp(): void
     {
-        $this->account = $this->createPartialMock(Account::class, ['getNonce']);
-        $this->account->method('getNonce')->willReturn(str_repeat("\0", 24));
+        $cryptography = $this->createPartialMock(ED25519::class, ['getNonce']);
+        $cryptography->method('getNonce')->willReturn(str_repeat("\0", 24));
+
+        $this->account = new Account($cryptography);
 
         $this->account->address = base58_decode('3JmCa4jLVv7Yn2XkCnBUGsa7WNFVEMxAfWe');
         
@@ -79,7 +83,7 @@ class AccountTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Unable to sign message; no secret sign key');
 
-        $account = new Account();
+        $account = new Account($this->account->getCryptography());
         
         $account->sign("hello");
     }
@@ -98,8 +102,7 @@ class AccountTest extends TestCase
 
     public function testSignAndVerifyOtherAccount()
     {
-        $account = $this->createPartialMock(Account::class, ['getNonce']);
-        $account->method('getNonce')->willReturn(str_repeat("\0", 24));
+        $account = new Account($this->account->getCryptography());
         
         $account->sign = (object) [
             'secretkey' => base58_decode('3Exo2vCYQXd6Uqb4basuhSbCQbfUXAfp71Tbr1E2Yi7tkJeMqdEabjavuHFZj9oJ3TJyMGJssw4w1pdg8HVT1Xjx'),
@@ -144,10 +147,9 @@ class AccountTest extends TestCase
         $this->account->verify($signature, $hash, 'base64');
     }
     
-    public function testVerifyLTORequest()
+    public function testVerifyLtoRequest()
     {
-        $account = $this->createPartialMock(Account::class, ['getNonce']);
-        $account->method('getNonce')->willReturn(str_repeat("\0", 24));
+        $account = new Account($this->account->getCryptography());
         
         $account->sign = (object) [
             'secretkey' => base58_decode('4zsR9xoFpxfnNwLcY4hdRUarwf5xWtLj6FpKGDFBgscPxecPj2qgRNx4kJsFCpe9YDxBRNoeBWTh2SDAdwTySomS'),
@@ -228,8 +230,7 @@ class AccountTest extends TestCase
 
     public function createSecondaryAccount()
     {
-        $account = $this->createPartialMock(Account::class, ['getNonce']);
-        $account->method('getNonce')->willReturn(str_repeat('0', 24));
+        $account = new Account($this->account->getCryptography());
 
         $account->address = base58_decode('3JwCboNM8yFNxZqbDcj4H9andqoSA25iGTa');
         
@@ -252,7 +253,7 @@ class AccountTest extends TestCase
         
         $cyphertext = $this->account->encryptFor($recipient, 'hello');
         
-        $this->assertEquals('2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D', base58_encode($cyphertext));
+        $this->assertEquals('2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D', $cyphertext);
     }
 
     public function testEncryptForWithoutPrivateKey()
@@ -281,7 +282,7 @@ class AccountTest extends TestCase
     public function testDecryptFrom()
     {
         $recipient = $this->createSecondaryAccount();
-        $cyphertext = base58_decode('2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D');
+        $cyphertext = '2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D';
         
         $message = $recipient->decryptFrom($this->account, $cyphertext);
         
@@ -296,7 +297,7 @@ class AccountTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage("Unable to decrypt message; no secret encryption key");
 
-        $cyphertext = base58_decode('2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D');
+        $cyphertext = '2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D';
 
         $recipient->decryptFrom($this->account, $cyphertext);
     }
@@ -310,7 +311,7 @@ class AccountTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage("Unable to decrypt message; no public encryption key for sender");
 
-        $cyphertext = base58_decode('2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D');
+        $cyphertext = '2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D';
 
         $recipient->decryptFrom($this->account, $cyphertext);
     }
@@ -322,7 +323,7 @@ class AccountTest extends TestCase
     {
         $this->expectException(\LTO\DecryptException::class);
 
-        $cyphertext = base58_decode('2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D');
+        $cyphertext = '2246pmtzDem9GB15GmtULMXB7Vrr1wciQcHsQvrUsmapeaBQzqHNUcS4KYYu7D';
         
         $this->account->decryptFrom($this->account, $cyphertext);
     }

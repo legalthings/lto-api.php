@@ -28,6 +28,7 @@
         "ext-json": "*",
         "ext-sodium": "*",
         "legalthings/base58-compat": "^0.1.0",
+        "mdanter/ecc": "^1.0",
         "psr/http-message": "^1.0",
         "psr/http-server-middleware": "^1.0"
     },
