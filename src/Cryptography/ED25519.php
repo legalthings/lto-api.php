@@ -6,7 +6,6 @@ namespace LTO\Cryptography;
 
 use LTO\Cryptography;
 use LTO\DecryptException;
-use LTO\InvalidAccountException;
 use SodiumException;
 
 // ED25519 sign functions
@@ -29,7 +28,6 @@ use function sodium_crypto_box_publickey_from_secretkey as x25519_publickey_from
 // Convert ED25519 keys to X25519 keys
 use function sodium_crypto_sign_ed25519_pk_to_curve25519 as ed25519_to_x25519_publickey;
 use function sodium_crypto_sign_ed25519_sk_to_curve25519 as ed25519_to_x25519_secretkey;
-
 
 /**
  * ED25519 signing and X25519 encryption
@@ -88,9 +86,9 @@ class ED25519 implements Cryptography
         try {
             $encryptionKey = x25519_keypair($secretkey, $publicKey);
             $message = x25519_decrypt($encryptedMessage, $nonce, $encryptionKey);
-        } catch (SodiumException $exception) {
+        } catch (SodiumException $exception) { // @codeCoverageIgnoreStart
             throw new DecryptException("Failed to decrypt message", 0, $exception);
-        }
+        } // @codeCoverageIgnoreEnd
 
         if ($message === false) {
             throw new DecryptException("Failed to decrypt message");
