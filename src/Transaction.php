@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LTO;
 
+use function sodium_crypto_generichash as blake2b;
+
 /**
  * Abstract base class for transactions.
  */
@@ -47,6 +49,17 @@ abstract class Transaction implements \JsonSerializable
      * Get binary representation of the unsigned transaction.
      */
     abstract public function toBinary(): string;
+
+    /**
+     * Get the transaction id.
+     * Generate it from the binary if the id is unknown.
+     *
+     * @return string
+     */
+    public function getId(): string
+    {
+        return $this->id ?? blake2b($this->toBinary());
+    }
 
     /**
      * Sign this transaction.
