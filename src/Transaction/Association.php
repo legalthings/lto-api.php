@@ -111,6 +111,14 @@ class Association extends Transaction
     }
 
     /**
+     * Create a transaction to revoke this association.
+     */
+    public function revoke(): RevokeAssociation
+    {
+        return new RevokeAssociation($this->party, $this->associationType, $this->hash, 'base58');
+    }
+
+    /**
      * @inheritDoc
      */
     public static function fromData(array $data)
