@@ -77,6 +77,14 @@ class Lease extends Transaction
     }
 
     /**
+     * Create a Cancel Lease transaction for this lease.
+     */
+    public function cancel(): CancelLease
+    {
+        return new CancelLease($this->getId());
+    }
+
+    /**
      * @inheritDoc
      */
     public function jsonSerialize(): array
